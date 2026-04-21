@@ -34,8 +34,7 @@
     },
     "expected_retrieval_ids": {
       "type": "array",
-      "description": "Ground-truth doc/chunk ids expected in retrieval results",
-      "minItems": 1,
+      "description": "Ground-truth doc/chunk ids expected in retrieval results. This can be empty for out-of-context cases.",
       "items": {
         "type": "string",
         "minLength": 1
