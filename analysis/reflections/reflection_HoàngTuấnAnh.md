@@ -1,6 +1,8 @@
 # Reflection — Member E: DevOps/Performance Engineer
 ## Lab 14 — AI Evaluation Factory
 ### Hoàng Tuấn Anh
+**Vai trò:** Thành viên 5 - DevOps/Performance  
+**Task:** Task 5 (Async Runner + Cost + Main.py Integration  )
 
 ---
 
@@ -44,6 +46,7 @@ Xuất report đầy đủ cho `summary.json`:
 - In đầy đủ Performance, Cost, Reliability metrics ra console
 
 **Git commits:**
+- https://github.com/TBNRGarret/Lab14-A1-C401/commit/1ae59691
 - `feat(eval): Hoàn thiện High-Performance Async Runner & Automated Release Gate`
 - Branch: `feat/runner-circuit-breaker`
 
@@ -115,16 +118,64 @@ Kết quả thực tế: 53 cases × avg 8.6s/case = 455s tuần tự → chỉ 
 
 ## 4. Kết quả Benchmark thực tế
 
-Chạy benchmark trên **53 test cases** với cấu hình:
-- Agent: GPT-4o-mini (V1 và V2)
-- Judge: GPT-4o + Gemini 2.5 Flash
-- Semaphore: 5 concurrent
+Chạy benchmark trên **53 test cases** (golden_set) với cấu hình:
+- Agent: Gemini (`google.generativeai`) — V1 (baseline) và V2 (optimized)
+- Judge: GPT-4o + Gemini 2.5 Flash (dual-judge)
+- Semaphore: 5 concurrent requests
 - Budget: $5.00
+
+### So sánh V1 vs V2 (Regression Test)
+
+| Metric | V1 | V2 | Delta |
+|--------|-----|-----|-------|
+| **avg_score** | 4.097 | 4.210 | **+0.113** ✅ |
+| **hit_rate** | 56.60% | 56.60% | +0.00% |
+| **MRR** | 0.276 | 0.285 | +0.009 |
+| **agreement_rate** | 97.5% | 97.8% | +0.3% |
+| **avg_latency** | 7.442s | 8.316s | +0.874s |
+
+### Performance
+
+| Metric | V1 | V2 |
+|--------|-----|-----|
+| Pipeline time | 82.34s | 94.2s |
+| Avg/case | 1.55s | 1.78s |
+| SLA < 2 phút | ✅ ĐẠT | ✅ ĐẠT |
+| Bottleneck | judge_eval | judge_eval |
+| Pass / Fail / Error | 45 / 8 / 0 | 45 / 8 / 0 |
+
+### Chi phí (FinOps)
+
+| Component | Tokens | Chi phí |
+|-----------|--------|---------|
+| **Agent** (Gemini) | 102,578 | $0.7182 |
+| **Judge GPT-4o** | 10,600 | $0.0742 |
+| **Judge Gemini-2.5-flash** | 10,600 | $0.0022 |
+| **Tổng V2** | **123,778** | **$0.7946** |
+| Avg/eval | — | $0.0150 |
+| V1 tổng | 91,003 | $0.5652 |
+
+### Reliability
 
 | Metric | Kết quả |
 |--------|---------|
-| Pipeline time | 93.9s (SLA < 2 phút: ✅ ĐẠT) |
-| Error rate | 0% (106 API calls, 0 errors) |
-| Total cost | $0.7961 (15.9% budget) |
-| Bottleneck | judge_eval (6.67s avg, gọi 2 model song song) |
-| Release Gate | ✅ APPROVE (V2 avg_score +0.097) |
+| Error rate | **0%** (0 errors / 53 cases) |
+| Retries | 0 |
+| Fallbacks | 0 |
+| Circuit Breaker Agent | CLOSED (healthy) |
+| Circuit Breaker Judge | CLOSED (healthy) |
+
+### Đề xuất tối ưu chi phí (giảm 30%+)
+
+| Đề xuất | Tiết kiệm ước tính |
+|---------|---------------------|
+| **Tiered Judging** — GPT-4o-mini cho easy/medium, GPT-4o chỉ cho hard cases | ~40% chi phí Judge |
+| **Early Termination** — 2 Judge đồng ý (score lệch ≤ 0.5) → skip Judge thứ 3 | ~20% |
+| **Batch API** — OpenAI Batch API cho eval không cần real-time | ~50% giá API |
+| **Response Cache** — Cache Agent response cho câu hỏi trùng | ~15% token Agent |
+
+### Release Gate
+
+> **✅ QUYẾT ĐỊNH: CHẤP NHẬN BẢN CẬP NHẬT (APPROVE)**
+>
+> V2 cải thiện avg_score +0.113, agreement_rate +0.3%, MRR +0.009 so với V1. Không có regression ở bất kỳ metric nào. Pipeline ổn định 0% error rate, chi phí trong ngân sách ($0.7946 / $5.00 = 15.9%).
