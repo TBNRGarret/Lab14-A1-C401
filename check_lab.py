@@ -31,14 +31,28 @@ def validate_lab():
         print(f"❌ File reports/summary.json không phải JSON hợp lệ: {e}")
         return
 
-    if "metrics" not in data or "metadata" not in data:
-        print("❌ File summary.json thiếu trường 'metrics' hoặc 'metadata'.")
-        return
-
-    metrics = data["metrics"]
+    # Check if using v1/v2 structure or flat structure
+    if "v1" in data or "v2" in data:
+        # Regression mode - use v2 or v1
+        version_data = data.get("v2") or data.get("v1")
+        if not version_data:
+            print("❌ File summary.json thiếu dữ liệu v1 hoặc v2.")
+            return
+        if "metrics" not in version_data or "metadata" not in version_data:
+            print("❌ File summary.json thiếu trường 'metrics' hoặc 'metadata' trong v1/v2.")
+            return
+        metrics = version_data["metrics"]
+        metadata = version_data["metadata"]
+    else:
+        # Flat structure
+        if "metrics" not in data or "metadata" not in data:
+            print("❌ File summary.json thiếu trường 'metrics' hoặc 'metadata'.")
+            return
+        metrics = data["metrics"]
+        metadata = data["metadata"]
 
     print(f"\n--- Thống kê nhanh ---")
-    print(f"Tổng số cases: {data['metadata'].get('total', 'N/A')}")
+    print(f"Tổng số cases: {metadata.get('total', 'N/A')}")
     print(f"Điểm trung bình: {metrics.get('avg_score', 0):.2f}")
 
     # EXPERT CHECKS
@@ -54,8 +68,13 @@ def validate_lab():
     else:
         print(f"⚠️ CẢNH BÁO: Thiếu Multi-Judge Metrics (agreement_rate).")
 
-    if data["metadata"].get("version"):
-        print(f"✅ Đã tìm thấy thông tin phiên bản Agent (Regression Mode)")
+    if metadata.get("version"):
+        print(f"✅ Đã tìm thấy thông tin phiên bản Agent: {metadata['version']}")
+    
+    # Check regression mode
+    if "regression" in data:
+        print(f"✅ Đã tìm thấy Regression Analysis (V1 vs V2)")
+        print(f"   Decision: {data['regression'].get('decision', 'N/A')}")
 
     print("\n🚀 Bài lab đã sẵn sàng để chấm điểm!")
 
