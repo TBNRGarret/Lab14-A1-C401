@@ -1,0 +1,215 @@
+{
+  "v1": {
+    "metadata": {
+      "version": "Agent_V1_Base",
+      "total": 53,
+      "passed": 43,
+      "failed": 10,
+      "errors": 0,
+      "timestamp": "2026-04-21 16:48:56"
+    },
+    "metrics": {
+      "avg_score": 4.090754716981132,
+      "hit_rate": 0.566,
+      "mrr": 0.2761,
+      "precision_at_k": 0.1132,
+      "ndcg_at_k": 0.3479,
+      "agreement_rate": 0.9747169811320754,
+      "avg_latency": 7.711083018867925
+    },
+    "retrieval_analysis": {
+      "total_eval_cases": 53,
+      "failure_cases": 23,
+      "failure_rate": 0.434,
+      "quality_note": "📊 Retrieval metrics: Hit Rate=56.60%, MRR=0.2761. Cần phân tích sâu hơn để xác định root cause."
+    },
+    "performance": {
+      "timing": {
+        "total_pipeline_seconds": 85.28,
+        "avg_time_per_case": 1.61,
+        "stage_averages": {
+          "avg_agent_call": 1.8132,
+          "avg_ragas_eval": 0.0,
+          "avg_judge_eval": 5.8978,
+          "avg_total": 7.7111
+        },
+        "bottleneck_stage": "judge_eval",
+        "meets_sla": true
+      },
+      "cost": {
+        "total_tokens": 91002,
+        "total_cost_usd": 0.565203,
+        "avg_cost_per_eval": 0.010664,
+        "by_component": {
+          "agent": {
+            "tokens": 69802,
+            "cost_usd": 0.488778,
+            "calls": 53
+          },
+          "judge_gpt-4o": {
+            "tokens": 10600,
+            "cost_usd": 0.0742,
+            "calls": 53
+          },
+          "judge_gemini-2.5-flash": {
+            "tokens": 10600,
+            "cost_usd": 0.002226,
+            "calls": 53
+          }
+        },
+        "by_model": {
+          "gpt-4o-mini": {
+            "tokens": 69802,
+            "cost_usd": 0.488778,
+            "calls": 53
+          },
+          "gpt-4o": {
+            "tokens": 10600,
+            "cost_usd": 0.0742,
+            "calls": 53
+          },
+          "gemini-2.5-flash": {
+            "tokens": 10600,
+            "cost_usd": 0.002226,
+            "calls": 53
+          }
+        },
+        "budget_usd": 5.0,
+        "budget_usage_pct": 11.3
+      },
+      "reliability": {
+        "total_cases": 53,
+        "errors": 0,
+        "error_rate_pct": 0.0,
+        "retries": 0,
+        "fallbacks": 0,
+        "circuit_breaker_status": {
+          "agent": "CLOSED",
+          "judge": "CLOSED"
+        },
+        "error_details": []
+      },
+      "runner_config": {
+        "max_concurrent": 5,
+        "budget_usd": 5.0,
+        "circuit_failure_threshold": 5,
+        "circuit_recovery_timeout": 30.0
+      },
+      "optimization_suggestions": [
+        "💡 TIERED JUDGING: Dùng GPT-4o-mini cho easy/medium cases, GPT-4o chỉ cho hard/adversarial → tiết kiệm ~40% chi phí Judge.",
+        "💡 EARLY TERMINATION: 2 Judge đồng ý (score lệch ≤ 0.5) → skip Judge thứ 3 → tiết kiệm ~20%.",
+        "💡 BATCH API: Dùng OpenAI Batch API (giảm 50% giá) cho eval không cần real-time.",
+        "💡 RESPONSE CACHE: Cache Agent response cho câu hỏi trùng → tiết kiệm ~15% token Agent."
+      ]
+    }
+  },
+  "v2": {
+    "metadata": {
+      "version": "Agent_V2_Optimized",
+      "total": 53,
+      "passed": 45,
+      "failed": 8,
+      "errors": 0,
+      "timestamp": "2026-04-21 16:50:51"
+    },
+    "metrics": {
+      "avg_score": 4.18811320754717,
+      "hit_rate": 0.566,
+      "mrr": 0.2846,
+      "precision_at_k": 0.1132,
+      "ndcg_at_k": 0.3479,
+      "agreement_rate": 0.9616981132075472,
+      "avg_latency": 8.624003773584906
+    },
+    "retrieval_analysis": {
+      "total_eval_cases": 53,
+      "failure_cases": 23,
+      "failure_rate": 0.434,
+      "quality_note": "📊 Retrieval metrics: Hit Rate=56.60%, MRR=0.2846. Cần phân tích sâu hơn để xác định root cause."
+    },
+    "performance": {
+      "timing": {
+        "total_pipeline_seconds": 93.9,
+        "avg_time_per_case": 1.77,
+        "stage_averages": {
+          "avg_agent_call": 1.9581,
+          "avg_ragas_eval": 0.0,
+          "avg_judge_eval": 6.6658,
+          "avg_total": 8.624
+        },
+        "bottleneck_stage": "judge_eval",
+        "meets_sla": true
+      },
+      "cost": {
+        "total_tokens": 123995,
+        "total_cost_usd": 0.796149,
+        "avg_cost_per_eval": 0.015022,
+        "by_component": {
+          "agent": {
+            "tokens": 102795,
+            "cost_usd": 0.719723,
+            "calls": 53
+          },
+          "judge_gpt-4o": {
+            "tokens": 10600,
+            "cost_usd": 0.0742,
+            "calls": 53
+          },
+          "judge_gemini-2.5-flash": {
+            "tokens": 10600,
+            "cost_usd": 0.002226,
+            "calls": 53
+          }
+        },
+        "by_model": {
+          "gpt-4o-mini": {
+            "tokens": 102795,
+            "cost_usd": 0.719723,
+            "calls": 53
+          },
+          "gpt-4o": {
+            "tokens": 10600,
+            "cost_usd": 0.0742,
+            "calls": 53
+          },
+          "gemini-2.5-flash": {
+            "tokens": 10600,
+            "cost_usd": 0.002226,
+            "calls": 53
+          }
+        },
+        "budget_usd": 5.0,
+        "budget_usage_pct": 15.92
+      },
+      "reliability": {
+        "total_cases": 53,
+        "errors": 0,
+        "error_rate_pct": 0.0,
+        "retries": 0,
+        "fallbacks": 0,
+        "circuit_breaker_status": {
+          "agent": "CLOSED",
+          "judge": "CLOSED"
+        },
+        "error_details": []
+      },
+      "runner_config": {
+        "max_concurrent": 5,
+        "budget_usd": 5.0,
+        "circuit_failure_threshold": 5,
+        "circuit_recovery_timeout": 30.0
+      },
+      "optimization_suggestions": [
+        "💡 TIERED JUDGING: Dùng GPT-4o-mini cho easy/medium cases, GPT-4o chỉ cho hard/adversarial → tiết kiệm ~40% chi phí Judge.",
+        "💡 EARLY TERMINATION: 2 Judge đồng ý (score lệch ≤ 0.5) → skip Judge thứ 3 → tiết kiệm ~20%.",
+        "💡 BATCH API: Dùng OpenAI Batch API (giảm 50% giá) cho eval không cần real-time.",
+        "💡 RESPONSE CACHE: Cache Agent response cho câu hỏi trùng → tiết kiệm ~15% token Agent."
+      ]
+    }
+  },
+  "regression": {
+    "delta_avg_score": 0.0974,
+    "delta_hit_rate": 0.0,
+    "decision": "APPROVE"
+  }
+}
