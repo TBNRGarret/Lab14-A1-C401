@@ -38,6 +38,15 @@ Implement đầy đủ `evaluate_batch` và 4 metrics:
 
 `evaluate_batch` dùng `asyncio.Semaphore` để gọi agent song song và tránh rate limit.
 
+**Kết quả Benchmark thực tế (V1):**
+- **Hit Rate@K:** 56.60%
+- **MRR:** 0.2761
+- **Precision@K:** 11.32%
+- **NDCG@K:** 0.3479
+- **Agreement Rate:** 97.47% (Độ đồng thuận giữa GPT-4o và Gemini cực cao)
+
+Kết quả cho thấy phần Retrieval vẫn là nút thắt cổ chai lớn nhất (Hit Rate < 60%), ảnh hưởng trực tiếp đến chất lượng câu trả lời cuối cùng.
+
 ---
 
 ## 2. Technical Depth
@@ -48,9 +57,23 @@ MRR đo vị trí trung bình của tài liệu đúng đầu tiên trong kết 
 
 ### Trade-off Chi phí vs Chất lượng
 
-V2 dùng top_k=7 (thêm 2 chunks so với V1) → tăng ~40% token input → tăng chi phí. Nhưng coverage rộng hơn giúp Hit Rate cao hơn. Ngưỡng quyết định: nếu Hit Rate tăng >5% thì đáng đánh đổi chi phí thêm.
+V2 dùng top_k=7 (thêm 2 chunks so với V1) → tăng ~40% token input → tăng chi phí. Nhưng coverage rộng hơn giúp Hit Rate cao hơn (thực tế MRR tăng từ 0.2761 lên 0.2846). Ngưỡng quyết định: nếu Hit Rate tăng >5% thì đáng đánh đổi chi phí thêm.
+
+Theo `summary.json`, V2 giúp tăng điểm `avg_score` từ 4.09 lên 4.19 (+0.0974), đủ điều kiện để **APPROVE** release theo logic Release Gate.
 
 TF-IDF (không cần embedding API) giúp tiết kiệm 100% chi phí retrieval so với dùng `text-embedding-3-small`. Chi phí duy nhất là API generation.
+
+### Cohen's Kappa và Agreement Rate
+
+Cohen's Kappa là một chỉ số thống kê đo lường mức độ đồng thuận giữa hai người đánh giá (hoặc hai LLM Judge), có tính đến yếu tố đồng thuận ngẫu nhiên. Trong hệ thống Multi-Judge, chỉ đo mỗi Agreement Rate (tỉ lệ phần trăm trùng khớp) là chưa đủ. 
+
+Ví dụ: Nếu cả hai Judge đều có xu hướng chấm 5 điểm cho hầu hết mọi case, thì Agreement Rate sẽ rất cao nhưng không phản ánh đúng sự khách quan. Cohen's Kappa giúp chúng ta biết được sự đồng thuận này có thực sự đến từ tiêu chuẩn chấm điểm nhất quán hay chỉ là ngẫu nhiên. Nếu Kappa < 0.6, chúng ta cần xem xét lại Rubric chấm điểm vì nó đang quá mơ hồ.
+
+### Position Bias trong LLM Judge
+
+Position Bias là hiện tượng LLM Judge có xu hướng ưu tiên các câu trả lời ở vị trí nhất định (thường là câu trả lời đầu tiên - Lead Bias) khi so sánh A/B. Điều này làm sai lệch kết quả benchmark.
+
+Để giải quyết vấn đề này, trong code tôi đã triển khai kỹ thuật **Swap Augmentation**: Đảo vị trí của Response A và Response B rồi cho Judge chấm điểm lại lần hai. Nếu kết quả bị thay đổi chỉ vì thứ tự, hệ thống sẽ đánh dấu case đó là "Inconsistent" và yêu cầu sự can thiệp của Judge thứ ba hoặc lấy kết quả trung bình để đảm bảo tính công bằng.
 
 ---
 

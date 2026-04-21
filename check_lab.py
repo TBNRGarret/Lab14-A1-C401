@@ -33,6 +33,7 @@ def validate_lab():
 
     # Check if using v1/v2 structure or flat structure
     if "v1" in data or "v2" in data:
+        print("ℹ️  Phát hiện format Multi-version (V1/V2).")
         # Regression mode - use v2 or v1
         version_data = data.get("v2") or data.get("v1")
         if not version_data:
