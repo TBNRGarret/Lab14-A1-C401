@@ -178,20 +178,37 @@ async def main():
     print("\n" + "=" * 60)
     print("🚦 RELEASE GATE")
     print("=" * 60)
-    blocked = False
-    if delta_score < 0:
-        print(f"❌ BLOCK: avg_score giảm ({delta_score:+.3f})")
-        blocked = True
-    if delta_hitrate < -0.05:
-        print(f"❌ BLOCK: hit_rate giảm > 5% ({delta_hitrate:+.3%})")
-        blocked = True
-    if m2["agreement_rate"] < 0.7:
-        print(f"⚠️  WARNING: agreement_rate thấp ({m2['agreement_rate']:.2%})")
+    warnings = []
+    blocks = []
+    
+    v1_cost = v1_summary.get("performance", {}).get("cost", {}).get("total_cost_usd", 0)
+    v2_cost = v2_summary.get("performance", {}).get("cost", {}).get("total_cost_usd", 0)
+    percentage_cost_change = ((v2_cost - v1_cost) / max(0.0001, v1_cost)) * 100 if v1_cost > 0 else 0
+    percentage_hitrate_change = (delta_hitrate / max(0.0001, m1.get("hit_rate", 1.0))) * 100
 
-    if not blocked:
-        print("✅ QUYẾT ĐỊNH: CHẤP NHẬN BẢN CẬP NHẬT (APPROVE)")
+    if delta_score < 0:
+        blocks.append(f"❌ BLOCK: avg_score giảm ({delta_score:+.3f})")
+    if percentage_hitrate_change < -5.0:
+        blocks.append(f"❌ BLOCK: hit_rate giảm > 5% ({percentage_hitrate_change:+.2f}%)")
+    if percentage_cost_change > 20.0:
+        warnings.append(f"⚠️ WARNING: Cost tăng quá 20% ({percentage_cost_change:+.2f}%)")
+    if m2["agreement_rate"] < 0.7:
+        warnings.append(f"⚠️  WARNING: agreement_rate thấp ({m2['agreement_rate']:.2%})")
+
+    for w in warnings:
+        print(w)
+    for b in blocks:
+        print(b)
+        
+    if blocks:
+        gate_status = "REJECTED (BLOCKED)"
+        print("\n❌ QUYẾT ĐỊNH: TỪ CHỐI (BLOCK RELEASE)")
+    elif warnings:
+        gate_status = "APPROVED (WITH WARNINGS)"
+        print("\n✅ QUYẾT ĐỊNH: CHẤP NHẬN CÓ CẢNH BÁO (APPROVE WITH WARNINGS)")
     else:
-        print("❌ QUYẾT ĐỊNH: TỪ CHỐI (BLOCK RELEASE)")
+        gate_status = "APPROVED (CLEAN)"
+        print("\n✅ QUYẾT ĐỊNH: CHẤP NHẬN BẢN CẬP NHẬT (APPROVE)")
 
     # ── Save reports ──
     os.makedirs("reports", exist_ok=True)
@@ -202,7 +219,10 @@ async def main():
         "regression": {
             "delta_avg_score": round(delta_score, 4),
             "delta_hit_rate": round(delta_hitrate, 4),
-            "decision": "APPROVE" if not blocked else "BLOCK",
+            "percentage_cost_change": round(percentage_cost_change, 2),
+            "warnings": warnings,
+            "blocks": blocks,
+            "decision": gate_status,
         },
     }
 
