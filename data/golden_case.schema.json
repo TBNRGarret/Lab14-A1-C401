@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/golden_case.schema.json",
+  "title": "Golden Dataset Test Case",
+  "description": "Schema for one evaluation test case in data/golden_set.jsonl",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "question",
+    "expected_answer",
+    "expected_retrieval_ids",
+    "metadata"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique case identifier"
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Input question for the agent"
+    },
+    "expected_answer": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference answer used by judges"
+    },
+    "context": {
+      "type": "string",
+      "description": "Optional source excerpt shown to dataset designers"
+    },
+    "expected_retrieval_ids": {
+      "type": "array",
+      "description": "Ground-truth doc/chunk ids expected in retrieval results",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "difficulty",
+        "type"
+      ],
+      "properties": {
+        "difficulty": {
+          "type": "string",
+          "enum": [
+            "easy",
+            "medium",
+            "hard",
+            "adversarial"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "fact-check",
+            "reasoning",
+            "multi-turn",
+            "out-of-context",
+            "ambiguous",
+            "conflict",
+            "prompt-injection",
+            "goal-hijacking"
+          ]
+        },
+        "source_doc": {
+          "type": "string",
+          "description": "Primary source document id"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}
