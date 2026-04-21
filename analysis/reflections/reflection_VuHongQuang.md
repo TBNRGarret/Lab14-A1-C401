@@ -1,7 +1,7 @@
 # Reflection — Member A: Golden Dataset & SDG Engineer
 ## Lab 14 — AI Evaluation Factory
 
-**Họ và tên:** Vũ Hồng Quang  
+**Họ và tên:** Vũ Hồng Quang - 2A202600341
 **Vai trò:** Member A - Golden Dataset & SDG Engineer  
 **Task chính:** Task 1 — Corpus, Golden Dataset Schema và Synthetic Data Generation  
 **File phụ trách:** `data/build_corpus.py`, `data/corpus.jsonl`, `data/golden_case.schema.json`, `data/synthetic_gen.py`, `data/validate_golden_set.py`, `data/SDG_PLAYBOOK.md`, `data/SDG_USAGE.md`
