@@ -1,6 +1,9 @@
 # Reflection — Member D: Backend Engineer
 ## Lab 14 — AI Evaluation Factory
-
+**Họ và tên:** Phạm Tuấn Anh
+**Vai trò:** Member D - Backend Engineer  
+**MSSV:** 2A202600271  
+**Ngày:** 2026-04-21
 ---
 
 ## 1. Engineering Contribution (Task 2 + Task 3)
