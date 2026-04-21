@@ -6,17 +6,18 @@
 
 | Metric | V1 (Base) | V2 (Optimized) | Delta | Nhận xét |
 |--------|-----------|----------------|-------|----------|
-| **Avg Score** | 4.091 | 4.188 | **+0.097** ✅ | V2 tốt hơn, Judge GPT+Gemini đều đồng ý |
-| **Pass Rate** | 81.1% (43/53) | 84.9% (45/53) | **+3.8%** ✅ | V2 giảm 2 case fail |
-| **Hit Rate** | 56.6% | 56.6% | 0.0% | Cùng retrieval engine, chưa cải thiện |
-| **MRR** | 0.276 | 0.285 | **+0.009** ✅ | V2 xếp hạng context tốt hơn nhờ top_k=7 |
-| **Agreement Rate** | 97.5% | 96.2% | -1.3% | Vẫn rất cao, 2 Judge gần như luôn đồng thuận |
-| **Avg Latency** | 7.71s | 8.62s | +0.91s | V2 chậm hơn do top_k=7 (thêm context) |
+| **Avg Score** | 4.097 | 4.210 | **+0.1132** ✅ | V2 tốt hơn, Judge GPT+Gemini đều đồng ý |
+| **Pass Rate** | 84.9% (45/53) | 84.9% (45/53) | 0.0% | Cùng số pass, V2 cải thiện score không đổi pass |
+| **Hit Rate** | 56.60% | 56.60% | 0.0% | Cùng retrieval engine, chưa cải thiện |
+| **MRR** | 0.2761 | 0.2846 | **+0.009** ✅ | V2 xếp hạng context tốt hơn |
+| **Agreement Rate** | 97.5% | 97.8% | **+0.3%** ✅ | 2 Judge gần như luôn đồng thuận |
+| **Avg Latency** | 7.44s | 8.32s | +0.87s | V2 chậm hơn nhẹ do xử lý thêm context |
 
 ### Quyết định Release Gate: ✅ APPROVE
-- avg_score tăng (+0.097)
+- avg_score tăng (+0.1132)
 - hit_rate không giảm
-- agreement_rate > 0.7 (96.2%)
+- agreement_rate > 0.7 (97.8%)
+- Không có regression ở bất kỳ metric nào
 
 ---
 
@@ -26,25 +27,25 @@
 
 | Metric | V1 | V2 |
 |--------|----|----|
-| **Total Pipeline** | 85.28s | 93.90s |
-| **Avg/case (wall clock)** | 1.61s | 1.77s |
-| **Avg Agent Call** | 1.81s | 1.96s |
-| **Avg Judge Eval** | 5.90s | 6.67s |
+| **Total Pipeline** | 82.34s | 94.20s |
+| **Avg/case (wall clock)** | 1.55s | 1.78s |
+| **Avg Agent Call** | 1.61s | 2.04s |
+| **Avg Judge Eval** | 5.83s | 6.27s |
 | **Bottleneck** | judge_eval | judge_eval |
 | **SLA < 2 phút** | ✅ ĐẠT | ✅ ĐẠT |
 
 > **Nhận xét**: Pipeline chạy 53 cases trong ~1.5 phút nhờ `asyncio.Semaphore(5)` chạy song song 5 cases.
 > Bottleneck là `judge_eval` vì phải gọi 2 API (GPT + Gemini) song song + có thể trigger tie-breaker.
-> Avg/case (wall clock) = 1.77s << Avg/case (sequential) = 8.62s → concurrency tiết kiệm ~80% thời gian.
+> Avg/case (wall clock) = 1.78s << Avg/case (sequential) = 8.32s → concurrency tiết kiệm ~80% thời gian.
 
 ### 💰 Cost Analysis
 
 | Component | V1 Tokens | V1 Cost | V2 Tokens | V2 Cost | % Tổng (V2) |
 |-----------|-----------|---------|-----------|---------|-------------|
-| **Agent (gpt-4o-mini)** | 69,802 | $0.4888 | 102,795 | $0.7197 | **90.4%** |
+| **Agent (gpt-4o-mini)** | 69,803 | $0.4888 | 102,578 | $0.7182 | **90.4%** |
 | **Judge GPT-4o** | 10,600 | $0.0742 | 10,600 | $0.0742 | 9.3% |
 | **Judge Gemini-2.5-Flash** | 10,600 | $0.0022 | 10,600 | $0.0022 | 0.3% |
-| **TỔNG** | **91,002** | **$0.5652** | **123,995** | **$0.7961** | **100%** |
+| **TỔNG** | **91,003** | **$0.5652** | **123,778** | **$0.7946** | **100%** |
 
 | Metric | V1 | V2 |
 |--------|----|----|
@@ -54,7 +55,7 @@
 > **Nhận xét**:
 > - Agent chiếm **90.4%** tổng chi phí → điểm tối ưu lớn nhất.
 > - Gemini Judge chỉ tốn $0.002 cho 53 cases (rẻ hơn GPT 33 lần!) → dùng Gemini làm Judge phụ rất cost-effective.
-> - V2 tốn thêm $0.23 (+40% token Agent) do top_k=7 → trade-off: chi phí tăng nhưng avg_score cũng tăng.
+> - V2 tốn thêm $0.23 (+47% token Agent) do xử lý context nhiều hơn → trade-off: chi phí tăng nhưng avg_score cũng tăng.
 
 ### 🛡️ Reliability
 
@@ -75,7 +76,7 @@
 | # | Pattern | Mục đích | Kết quả thực tế |
 |---|---------|----------|-----------------|
 | 1 | **Header-Aware Wait** | Đọc `Retry-After` header từ 429 | Không trigger (0 rate limits) |
-| 2 | **Semaphore(5)** | Giới hạn 5 concurrent requests | 53 cases xong trong 93s thay vì ~450s tuần tự |
+| 2 | **Semaphore(5)** | Giới hạn 5 concurrent requests | 53 cases xong trong 94s thay vì ~450s tuần tự |
 | 3 | **Fallback Routing** | GPT-4o → GPT-4o-mini, Gemini 2.5 → 2.0 | Không trigger (0 failures) |
 | 4 | **Circuit Breaker** | Ngắt mạch sau 5 lỗi liên tiếp | CLOSED suốt → API stable |
 | 5 | **Tenacity Retry** | Auto retry 429/5xx, skip 401/quota | Không trigger (0 retries) |
